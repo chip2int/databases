@@ -1,6 +1,6 @@
-CREATE DATABASE chat;
+CREATE DATABASE chatterboxdb;
 
-USE chat;
+USE chatterboxdb;
 
 CREATE TABLE messages (
  /* Describe your table here.*/
