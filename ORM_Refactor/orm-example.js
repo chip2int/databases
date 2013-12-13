@@ -4,33 +4,47 @@
  */
 
 var Sequelize = require("sequelize");
-var sequelize = new Sequelize("chat", "bacon", "pass");
-/* TODO this constructor takes the database name, username, then password.
+var sequelize = new Sequelize("chatServerDB", "root");
+/* TODO this constructor takes the  database name, username, then password.
  * Modify the arguments if you need to */
 
 /* first define the data structure by giving property names and datatypes
  * See http://sequelizejs.com for other datatypes you can use besides STRING. */
 var User = sequelize.define('User', {
-  user_name: Sequelize.STRING,
+  user_name: Sequelize.STRING
 });
 
-/* .sync() makes Sequelize create the database table for us if it doesn't
- *  exist already: */
-User.sync().success(function() {
-  /* This callback function is called once sync succeeds. */
+var Message = sequelize.define('Message', {
+  message: Sequelize.STRING
+});
 
-  // now instantiate an object and save it:
-  var newUser = User.build({user_name: "Jean Valjean"});
-  newUser.save().success(function() {
+User.sync({force: true}).complete(function(err){
+  if(!!err){console.log(err);}
+  else {console.log("User Table creation worked!");}
+});
+Message.sync({force: true}).complete(function(err){
+  if(!!err){console.log(err);}
+  else {console.log("Message Table creation worked!");}
+});
+User.hasOne(Message);
 
-    /* This callback function is called once saving succeeds. */
-
-    // Retrieve objects from the database:
-    User.findAll({ where: {user_name: "Jean Valjean"} }).success(function(usrs) {
-      // This function is called back with an array of matches.
-      for (var i = 0; i < usrs.length; i++) {
-        console.log(usrs[i].user_name + " exists");
-      }
+///////////////////////////////////////////POST
+var insertMsgFromUser = function(user, message) {
+  User.build({
+      user_name: user
+    }).save().success(function(queryResult){
+      var uid = queryResult["dataValues"].id;
+      Message.build({UserId:uid, message: message}).save();
     });
-  });
+};
+
+insertMsgFromUser("Romeo", "Hey Juliet!");
+insertMsgFromUser("Dracula", "Blood!!");
+
+/////////////////////////////////////////////GET
+Message.findAll().complete(function(err, findQueryResult){
+  console.log("here");
+  console.log(findQueryResult);
 });
+
+

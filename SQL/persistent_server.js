@@ -13,8 +13,8 @@ var dbConnection = mysql.createConnection({
   database: "chatterboxdb"
 });
 
-dbConnection.connect();
- dbConnection.query("insert into rooms  values(3, 'ATL');");
+//dbConnection.connect();
+ //dbConnection.query("insert into rooms  values(1, 'ATL');");
 // dbConnection.end();
 /* Now you can make queries to the Mysql database using the
  * dbConnection.query() method.
@@ -63,25 +63,43 @@ var actionListener = {
       data += chunk;
     });
 
-
+    //Split the data into username and message
     request.on('end', function(){
       var msgs = data.split('&');
+      var uid;
       var uName = msgs[0].split('=')[1];
       var msg = msgs[1].split('=')[1];
 
+      dbConnection.connect();
+      dbConnection.query("insert into rooms  values(1, 'ATL');");
+
+      //Insert Username and userid into chatterboxmain
       dbConnection.query("INSERT INTO chatterboxmain VALUES (101,'" + uName + "');");
 
+
+      //Select the userid from the database for use in inserting msgs
       var queryString = "SELECT userid from chatterboxmain where username='" + uName + "';";
       var queryArgs = null;
       console.log("qString", queryString);
-      dbConnection.query(queryString, queryArgs, function(err, results, fields){
-        console.log("err", err);
-        console.log("results", results);
-        console.log("fields", fields);
-      });
 
-      dbConnection.query("INSERT INTO messages VALUES ");
-/*
+
+      dbConnection.query(queryString, queryArgs, function(err, results, fields){
+        console.log("////These are from the Select Query////");
+        console.log("err", err);
+        uid = results[0].userid;
+        console.log("results", uid);
+        console.log("fields", fields);
+
+
+
+      var entry =   "INSERT INTO messages VALUES (" + uid + ',"' + msg + '",' + "'2013-02-02'" + ", 1);";
+      console.log("Entry -->", entry);
+
+      dbConnection.query(entry);
+      dbConnection.end();
+
+    });
+/*}
       var temp = JSON.parse(data);
       temp['createdAt'] = new Date();
       temp = JSON.stringify(temp);
@@ -92,16 +110,24 @@ var actionListener = {
       response.writeHead(statusCode, headers);
       response.end("Hello");
       //response.end('[' + storage.getData() + ']');
-      dbConnection.end();
+      //dbConnection.end();
     });
 
   },
   'GET': function(request, response){
     console.log("here");
+    var result = "";
     statusCode = 200;
     response.writeHead(statusCode, headers);
-    response.end("Hello!");
-    //response.end('[' + storage.getData() + ']');
+
+    var queryString = 'select * from messages;';
+    dbConnection.query(queryString, null, function (err, results, fields) {
+      result = results;
+
+
+    console.log(result[0]);
+    response.end(JSON.stringify(result[0]));
+  });
   },
 
   'OPTIONS': function(request, response){
